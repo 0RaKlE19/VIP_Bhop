@@ -29,26 +29,24 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
     if (VIP_IsVIPLoaded())
-    {
         VIP_OnVIPLoaded();
-    }
     
-    Handle ConVars = CreateConVar("sm_vip_bhop_timer_on", "1", "Включить функции таймера до включения Bhop'a? (1 - Да, 0 - Нет)", 0, true, 0.0, true, 1.0);
-    g_bTimerOn = GetConVarBool(ConVars);
-    HookConVarChange(ConVars, OnTimerOnChange);
-    
-    ConVars = CreateConVar("sm_vip_bhop_timer", "5", "Через сколько секунд разрешать игроку бхопить если включена функция таймера?", 0, true, 1.0, true, 60.0);
-    g_iTimer = GetConVarInt(ConVars);
-    HookConVarChange(ConVars, OnTimerChange);
-    
-    ConVars = CreateConVar("sm_vip_bhop_info_on", "1", "Оповещать что бхоп заработает через N секунд?", 0, true, 0.0, true, 1.0);
-    g_bInfoOn = GetConVarBool(ConVars);
-    HookConVarChange(ConVars, OnInfoOnChange);
-    
-    ConVars = CreateConVar("sm_vip_bhop_info_type", "1", "Включать оповещение 1 - после mp_freeze_time, 0 - в начале раунда.", 0, true, 0.0, true, 1.0);
-    g_bFreezeType = GetConVarBool(ConVars);
-    HookConVarChange(ConVars, OnFreezeTypeChange);
-    
+    Handle hRegister;
+
+    HookConVarChange(hRegister = CreateConVar("sm_vip_bhop_timer_on", "1", "Enable timer functions before turning on Bhop? (1 - Yes, 0 - No)", 0, true, 0.0, true, 1.0), OnTimerOnChange);
+    g_bTimerOn = GetConVarBool(hRegister);
+
+    HookConVarChange(hRegister = CreateConVar("sm_vip_bhop_timer", "5", "How many seconds will it take to allow the player to bhop if the timer function is enabled?", 0, true, 1.0, true, 60.0), OnTimerChange);
+    g_iTimer = GetConVarInt(hRegister);
+
+    HookConVarChange(hRegister = CreateConVar("sm_vip_bhop_info_on", "1", "Notify that bhop will work in N seconds?", 0, true, 0.0, true, 1.0), OnInfoOnChange);
+    g_bInfoOn = GetConVarBool(hRegister);
+
+    HookConVarChange(hRegister = CreateConVar("sm_vip_bhop_info_type", "1", "Enable notification 1 - after mp_freeze_time, 0 - at the beginning of the round.", 0, true, 0.0, true, 1.0), OnFreezeTypeChange);
+    g_bFreezeType = GetConVarBool(hRegister);
+
+    CloseHandle(hRegister);
+
     AutoExecConfig(true, "VIP_Bhop", "vip");
 }
 
@@ -60,9 +58,8 @@ public void OnFreezeTypeChange(Handle ConVars, const char[] oldValue, const char
 public void OnPluginEnd()
 {
     if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "VIP_UnregisterFeature") == FeatureStatus_Available)
-    {
         VIP_UnregisterFeature(g_sFeature);
-    }
+    CloseHandle(sv_autobunnyhopping);
 }
 
 public void VIP_OnVIPLoaded()
@@ -75,9 +72,7 @@ public Action eRoundStart(Event hEvent, const char[] sEvName, bool bDontBroadcas
     if(g_bTimerOn && g_bInfoOn && !g_bFreezeType)
     {
         char szBuffer[128];
-        char szBufferTimer[2];
-        IntToString(g_iTimer, szBufferTimer, sizeof(szBufferTimer));
-        FormatEx(szBuffer, sizeof(szBuffer), "%t", "BHOP_TIME", szBufferTimer);
+        FormatEx(szBuffer, sizeof(szBuffer), "%t", "BHOP_TIME", g_iTimer);
         if (g_iTimer > 0)
         {
             for (int i = 1; i < MaxClients; i++)
@@ -97,9 +92,7 @@ public Action eRoundStart(Event hEvent, const char[] sEvName, bool bDontBroadcas
         for (int i = 1; i < MaxClients; i++)
         {
             if(IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i) && VIP_IsClientFeatureUse(i, g_sFeature))
-            {
                 sv_autobunnyhopping.ReplicateToClient(i, "1");
-            }
         }
     }
     return Plugin_Continue;
@@ -114,9 +107,7 @@ public Action eRoundFreezeEnd(Event hEvent, const char[] sEvName, bool bDontBroa
         if(g_bInfoOn && g_bFreezeType)
         {
             char szBuffer[128];
-            char szBufferTimer[2];
-            IntToString(g_iTimer, szBufferTimer, sizeof(szBufferTimer));
-            FormatEx(szBuffer, sizeof(szBuffer), "%t", "BHOP_TIME", szBufferTimer);
+            FormatEx(szBuffer, sizeof(szBuffer), "%t", "BHOP_TIME", g_iTimer);
             if (g_iTimer > 0)
             {
                 for (int i = 1; i < MaxClients; i++)
@@ -137,9 +128,7 @@ public Action eRoundFreezeEnd(Event hEvent, const char[] sEvName, bool bDontBroa
         for (int i = 1; i < MaxClients; i++)
         {
             if(IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i) && VIP_IsClientFeatureUse(i, g_sFeature))
-            {
                 sv_autobunnyhopping.ReplicateToClient(i, "1");
-            }
         }
     }
     return Plugin_Continue;
@@ -151,9 +140,7 @@ public Action Timer_BhopStart(Handle hTimer)
     for(int i = 1; i <= MaxClients; i++)
     {
         if(IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i) && VIP_IsClientFeatureUse(i, g_sFeature))
-        {
             sv_autobunnyhopping.ReplicateToClient(i, "1");
-        }
     }
     return Plugin_Stop;
 }
@@ -163,7 +150,5 @@ public Action OnPlayerRunCmd(int iClient, int & iButtons)
     if (!g_bBHOPStart && g_bTimerOn) return;
     
     if (IsPlayerAlive(iClient) && VIP_IsClientFeatureUse(iClient, g_sFeature) && iButtons & IN_JUMP && !(GetEntityFlags(iClient) & FL_ONGROUND) && !(GetEntityMoveType(iClient) & MOVETYPE_LADDER))
-    {
         iButtons &= ~IN_JUMP;
-    }
 }
