@@ -7,9 +7,9 @@
 public Plugin myinfo = 
 {
     name = "[VIP] Bhop",
-    author = "PSIH",
+    author = "by R1KO (Fork by PSIH :{ )",
     version = "1.0.0",
-    url = "https://github.com/0RaKlE19/VIP-Bhop"
+    url = "https://github.com/0RaKlE19/VIP_Bhop"
 };
 
 static const char g_sFeature[] = "BHOP";
