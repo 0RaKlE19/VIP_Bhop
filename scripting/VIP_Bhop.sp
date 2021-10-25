@@ -2,7 +2,6 @@
 #pragma newdecls required
 
 #include <vip_core>
-#include <csgo_colors>
 
 public Plugin myinfo = 
 {
@@ -45,9 +44,8 @@ public void OnPluginStart()
     HookConVarChange(hRegister = CreateConVar("sm_vip_bhop_info_type", "1", "Enable notification 1 - after mp_freeze_time, 0 - at the beginning of the round.", 0, true, 0.0, true, 1.0), OnFreezeTypeChange);
     g_bFreezeType = GetConVarBool(hRegister);
 
-    CloseHandle(hRegister);
-
     AutoExecConfig(true, "VIP_Bhop", "vip");
+    CloseHandle(hRegister);
 }
 
 public void OnInfoOnChange(Handle ConVars, const char[] oldValue, const char[] newValue){g_bInfoOn = GetConVarBool(ConVars);}
@@ -62,10 +60,7 @@ public void OnPluginEnd()
     CloseHandle(sv_autobunnyhopping);
 }
 
-public void VIP_OnVIPLoaded()
-{
-    VIP_RegisterFeature(g_sFeature, INT);
-}
+public void VIP_OnVIPLoaded(){VIP_RegisterFeature(g_sFeature, INT);}
 
 public Action eRoundStart(Event hEvent, const char[] sEvName, bool bDontBroadcast)
 {
@@ -77,11 +72,11 @@ public Action eRoundStart(Event hEvent, const char[] sEvName, bool bDontBroadcas
         {
             for (int i = 1; i < MaxClients; i++)
             {
-                if(IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i))
+                if(IsClientConnected(i) && IsClientInGame(i) && !IsFakeClient(i) && IsPlayerAlive(i))
                 {
                     sv_autobunnyhopping.ReplicateToClient(i, "0");
                     if(VIP_IsClientFeatureUse(i, g_sFeature))
-                        CGOPrintToChat(i, szBuffer);
+                        VIP_PrintToChatClient(i, szBuffer);
                 }
             }
         }
@@ -91,7 +86,7 @@ public Action eRoundStart(Event hEvent, const char[] sEvName, bool bDontBroadcas
         g_bBHOPStart = true;
         for (int i = 1; i < MaxClients; i++)
         {
-            if(IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i) && VIP_IsClientFeatureUse(i, g_sFeature))
+            if(IsClientConnected(i) && IsClientInGame(i) && !IsFakeClient(i) && IsPlayerAlive(i) && VIP_IsClientFeatureUse(i, g_sFeature))
                 sv_autobunnyhopping.ReplicateToClient(i, "1");
         }
     }
@@ -112,11 +107,11 @@ public Action eRoundFreezeEnd(Event hEvent, const char[] sEvName, bool bDontBroa
             {
                 for (int i = 1; i < MaxClients; i++)
                 {
-                    if(IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i))
+                    if(IsClientConnected(i) && IsClientInGame(i) && !IsFakeClient(i) && IsPlayerAlive(i))
                     {
                         sv_autobunnyhopping.ReplicateToClient(i, "0");
                         if(VIP_IsClientFeatureUse(i, g_sFeature))
-                            CGOPrintToChat(i, szBuffer);
+                            VIP_PrintToChatClient(i, szBuffer);
                     }
                 }
             }
