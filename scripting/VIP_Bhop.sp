@@ -6,7 +6,7 @@
 public Plugin myinfo = 
 {
     name = "[VIP] Bhop",
-    author = "by R1KO (Fork by PSIH :{ )",
+    author = "R1KO (Fork by PSIH :{ )",
     version = "1.0.0",
     url = "https://github.com/0RaKlE19/VIP_Bhop"
 };
@@ -53,14 +53,14 @@ public void OnTimerChange(Handle ConVars, const char[] oldValue, const char[] ne
 public void OnTimerOnChange(Handle ConVars, const char[] oldValue, const char[] newValue){g_bTimerOn = GetConVarBool(ConVars);}
 public void OnFreezeTypeChange(Handle ConVars, const char[] oldValue, const char[] newValue){g_bFreezeType = GetConVarBool(ConVars);}
 
+public void VIP_OnVIPLoaded(){VIP_RegisterFeature(g_sFeature, INT);}
+
 public void OnPluginEnd()
 {
     if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "VIP_UnregisterFeature") == FeatureStatus_Available)
         VIP_UnregisterFeature(g_sFeature);
     CloseHandle(sv_autobunnyhopping);
 }
-
-public void VIP_OnVIPLoaded(){VIP_RegisterFeature(g_sFeature, INT);}
 
 public Action eRoundStart(Event hEvent, const char[] sEvName, bool bDontBroadcast)
 {
